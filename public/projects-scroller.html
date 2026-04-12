@@ -337,6 +337,18 @@ window.onmessage = (event) => {
   }
 };
 
+// Scroll wheel navigates between projects
+let scrollLocked = false;
+window.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (scrollLocked || projects.length === 0) return;
+  if (Math.abs(e.deltaY) < 30) return;
+  scrollLocked = true;
+  if (e.deltaY > 0 && activeIdx < projects.length - 1) setActive(activeIdx + 1);
+  else if (e.deltaY < 0 && activeIdx > 0) setActive(activeIdx - 1);
+  setTimeout(() => { scrollLocked = false; }, 700);
+}, { passive: false });
+
 // Fallback to demo data after 1s
 setTimeout(() => {
   if (projects.length === 0) renderProjects(DEMO_PROJECTS, {});

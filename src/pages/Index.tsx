@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const PROJECTS = [
@@ -57,7 +57,27 @@ const MetaRow = ({ label, value }: { label: string; value: string }) => (
 
 const Index = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const isScrolling = useRef(false);
   const p = PROJECTS[activeIndex];
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (isScrolling.current) return;
+      if (Math.abs(e.deltaY) < 30) return;
+
+      isScrolling.current = true;
+      if (e.deltaY > 0 && activeIndex < PROJECTS.length - 1) {
+        setActiveIndex((prev) => prev + 1);
+      } else if (e.deltaY < 0 && activeIndex > 0) {
+        setActiveIndex((prev) => prev - 1);
+      }
+      setTimeout(() => { isScrolling.current = false; }, 700);
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, [activeIndex]);
 
   return (
     <div
