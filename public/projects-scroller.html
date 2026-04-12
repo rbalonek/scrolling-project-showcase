@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects Scroller</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #faf0e4;
+    --fg: #1a1a1a;
+    --accent: #e8a854;
+    --dot-color: rgba(0,0,0,0.08);
+    --meta-color: rgba(0,0,0,0.5);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--fg);
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    overflow-x: hidden;
+  }
+
+  /* Each project section is full viewport height */
+  .project-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 60px 80px;
+    position: relative;
+  }
+
+  .project-inner {
+    display: flex;
+    gap: 60px;
+    width: 100%;
+    max-width: 1400px;
+    align-items: center;
+  }
+
+  /* Left: large image */
+  .project-image {
+    flex: 0 0 55%;
+    max-width: 55%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .project-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+
+  .project-section:hover .project-image img {
+    transform: scale(1.02);
+  }
+
+  /* Right: details */
+  .project-details {
+    flex: 1;
+    padding-right: 100px;
+  }
+
+  .project-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.2;
+    margin-bottom: 24px;
+  }
+
+  .project-description {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--meta-color);
+    margin-bottom: 32px;
+    max-width: 400px;
+    letter-spacing: 0.02em;
+  }
+
+  .project-meta {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding: 20px 0;
+    margin-bottom: 32px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 40px;
+    padding: 4px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .meta-label {
+    width: 100px;
+    color: var(--meta-color);
+    font-weight: 500;
+  }
+
+  .meta-value {
+    color: var(--fg);
+    font-weight: 500;
+  }
+
+  .view-project-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: var(--fg);
+    text-decoration: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+
+  .view-project-btn:hover { opacity: 0.8; }
+
+  /* Right sidebar: thumbnail strip */
+  .thumb-strip {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .thumb-item {
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.4;
+    filter: grayscale(0.6);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2px;
+  }
+
+  .thumb-item.active {
+    width: 80px;
+    height: 100px;
+    opacity: 1;
+    filter: grayscale(0);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--meta-color);
+    z-index: 100;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .scroll-up-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0,0,0,0.2);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .scroll-up-btn:hover { background: rgba(0,0,0,0.05); }
+  .scroll-up-btn svg { width: 14px; height: 14px; }
+
+  /* Demo fallback styling */
+  .demo-notice {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--fg);
+    padding: 8px 16px;
+    font-size: 11px;
+    border-radius: 4px;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  .demo-notice.show { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .project-section { padding: 40px 20px; }
+    .project-inner { flex-direction: column; gap: 30px; }
+    .project-image { flex: none; max-width: 100%; }
+    .project-details { padding-right: 80px; }
+    .thumb-strip { right: 10px; }
+    .thumb-item { width: 40px; height: 40px; }
+    .thumb-item.active { width: 55px; height: 70px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="thumb-strip" id="thumbStrip"></div>
+<div class="bottom-bar">
+  <button class="scroll-up-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+  <span id="counter">01/01</span>
+</div>
+<div class="demo-notice" id="demoNotice">Using demo data — connect via Wix postMessage for live data</div>
+
+<script>
+// Demo / fallback data
+const DEMO_PROJECTS = [
+  {
+    title: "Jewelry Lighting & Reflections",
+    description: "Shooting high-end jewelry in a controlled studio setting required a meticulous approach to lighting. Every gemstone had to reflect light in a way that enhanced its brilliance while avoiding unwanted glare.",
+    image: "https://images.unsplash.com/photo-1515562141589-67f0d569b6e3?w=800&q=80",
+    date: "1/5/25",
+    client: "TECH STARTUP",
+    category: "PRODUCT",
+    camera: "CANON EOS R5",
+    lens: "70-200MM F/2.8 VR II",
+    link: "#project-1"
+  },
+  {
+    title: "Kyoto Cherry Blossoms (2024)",
+    description: "Amid the cherry blossom season in Kyoto, this project focused on capturing the fleeting beauty of spring. The soft pink petals contrasted beautifully with the ancient temples, creating a dreamlike atmosphere.",
+    image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80",
+    date: "12/19/24",
+    client: "TECH STARTUP",
+    category: "LANDSCAPE",
+    camera: "CANON EOS R5",
+    lens: "50MM F/1.2 SUMMILUX",
+    link: "#project-2"
+  },
+  {
+    title: "Urban Architecture Series",
+    description: "A deep dive into the geometric patterns and raw textures of modern urban architecture. Each frame highlights the interplay between light, shadow, and structural form.",
+    image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80",
+    date: "11/3/24",
+    client: "DESIGN AGENCY",
+    category: "ARCHITECTURE",
+    camera: "SONY A7R V",
+    lens: "24-70MM F/2.8 GM",
+    link: "#project-3"
+  },
+  {
+    title: "Portrait in Natural Light",
+    description: "This portrait series explored the beauty of natural, unmanipulated light during golden hour. Minimal equipment, maximum emotional impact through genuine connection with each subject.",
+    image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80",
+    date: "10/15/24",
+    client: "FASHION LABEL",
+    category: "PORTRAIT",
+    camera: "LEICA M11",
+    lens: "35MM F/1.4 SUMMILUX",
+    link: "#project-4"
+  }
+];
+
+let projects = [];
+let config = {};
+
+function renderProjects(data, cfg) {
+  config = cfg || {};
+  projects = data;
+
+  if (cfg?.bgColor) document.documentElement.style.setProperty('--bg', cfg.bgColor);
+  if (cfg?.accentColor) document.documentElement.style.setProperty('--accent', cfg.accentColor);
+
+  const app = document.getElementById('app');
+  const strip = document.getElementById('thumbStrip');
+  const counter = document.getElementById('counter');
+  const total = String(projects.length).padStart(2, '0');
+
+  app.innerHTML = projects.map((p, i) => `
+    <section class="project-section" id="section-${i}" data-index="${i}">
+      <div class="project-inner">
+        <div class="project-image">
+          <img src="${p.image}" alt="${p.title}" loading="lazy" />
+        </div>
+        <div class="project-details">
+          <h2 class="project-title">${p.title}</h2>
+          <p class="project-description">${p.description || ''}</p>
+          <div class="project-meta">
+            ${p.date ? `<div class="meta-row"><span class="meta-label">DATE</span><span class="meta-value">${p.date}</span></div>` : ''}
+            ${p.client ? `<div class="meta-row"><span class="meta-label">CLIENT</span><span class="meta-value">${p.client}</span></div>` : ''}
+            ${p.category ? `<div class="meta-row"><span class="meta-label">CATEGORY</span><span class="meta-value">${p.category}</span></div>` : ''}
+            ${p.camera ? `<div class="meta-row"><span class="meta-label">CAMERA</span><span class="meta-value">${p.camera}</span></div>` : ''}
+            ${p.lens ? `<div class="meta-row"><span class="meta-label">LENS</span><span class="meta-value">${p.lens}</span></div>` : ''}
+          </div>
+          <a href="${p.link || '#'}" class="view-project-btn" target="_top">View Project</a>
+        </div>
+      </div>
+    </section>
+  `).join('');
+
+  strip.innerHTML = projects.map((p, i) => `
+    <div class="thumb-item ${i === 0 ? 'active' : ''}" data-index="${i}" onclick="scrollToSection(${i})">
+      <img src="${p.image}" alt="${p.title}" loading="lazy" />
+    </div>
+  `).join('');
+
+  counter.textContent = `01/${total}`;
+
+  // Intersection Observer for active state
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = parseInt(entry.target.dataset.index);
+        setActive(idx);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.project-section').forEach(s => observer.observe(s));
+}
+
+function setActive(idx) {
+  document.querySelectorAll('.thumb-item').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+  const total = String(projects.length).padStart(2, '0');
+  document.getElementById('counter').textContent = `${String(idx + 1).padStart(2, '0')}/${total}`;
+}
+
+function scrollToSection(idx) {
+  document.getElementById(`section-${idx}`)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Listen for Wix postMessage
+window.onmessage = (event) => {
+  if (event.data?.type === 'projects-data') {
+    document.getElementById('demoNotice').classList.remove('show');
+    renderProjects(event.data.projects, event.data.config);
+  }
+};
+
+// If no message received within 1s, use demo data
+setTimeout(() => {
+  if (projects.length === 0) {
+    document.getElementById('demoNotice').classList.add('show');
+    setTimeout(() => document.getElementById('demoNotice').classList.remove('show'), 3000);
+    renderProjects(DEMO_PROJECTS, {});
+  }
+}, 1000);
+</script>
+</body>
+</html>
