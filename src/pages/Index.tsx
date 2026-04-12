@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const PROJECTS = [
   {
@@ -50,102 +51,87 @@ const PROJECTS = [
 const MetaRow = ({ label, value }: { label: string; value: string }) => (
   <div className="flex gap-10 py-1 text-[11px] uppercase tracking-[0.1em] font-mono">
     <span className="w-24 text-foreground/50 font-medium">{label}</span>
-    <span className="text-foreground font-medium">{value}</span>
+    <span className="font-medium" style={{ color: "#1a1a1a" }}>{value}</span>
   </div>
 );
 
 const Index = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = Number(entry.target.getAttribute("data-index"));
-            setActiveIndex(idx);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    sectionRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scrollTo = (idx: number) => {
-    sectionRefs.current[idx]?.scrollIntoView({ behavior: "smooth" });
-  };
+  const p = PROJECTS[activeIndex];
 
   return (
     <div
-      className="relative min-h-screen"
+      className="relative min-h-screen overflow-hidden"
       style={{
         backgroundColor: "#faf0e4",
         backgroundImage: "radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}
     >
-      {/* Sections */}
-      {PROJECTS.map((p, i) => (
-        <section
-          key={i}
-          data-index={i}
-          ref={(el) => { sectionRefs.current[i] = el; }}
-          className="min-h-screen flex items-center px-8 md:px-20 py-16"
-        >
-          <div className="flex flex-col md:flex-row gap-8 md:gap-16 w-full max-w-[1400px]">
-            {/* Image */}
-            <div className="flex-shrink-0 md:w-[55%] overflow-hidden" style={{ aspectRatio: "3/4" }}>
-              <img
+      {/* Main content — single project at a time */}
+      <div className="min-h-screen flex items-center px-8 md:px-20 py-16">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-16 w-full max-w-[1400px]">
+          {/* Image with crossfade */}
+          <div className="flex-shrink-0 md:w-[55%] overflow-hidden relative" style={{ aspectRatio: "3/4" }}>
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={activeIndex}
                 src={p.image}
                 alt={p.title}
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
-                loading="lazy"
+                className="w-full h-full object-cover absolute inset-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
               />
-            </div>
-
-            {/* Details */}
-            <div className="flex-1 pr-0 md:pr-24 flex flex-col justify-center">
-              <h2
-                className="text-3xl md:text-5xl mb-6 leading-tight"
-                style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 400, color: "#1a1a1a" }}
-              >
-                {p.title}
-              </h2>
-              <p className="text-[13px] leading-relaxed mb-8 max-w-[400px] tracking-wide font-mono" style={{ color: "rgba(0,0,0,0.5)" }}>
-                {p.description}
-              </p>
-              <div className="border-t border-b py-5 mb-8" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
-                {p.date && <MetaRow label="DATE" value={p.date} />}
-                {p.client && <MetaRow label="CLIENT" value={p.client} />}
-                {p.category && <MetaRow label="CATEGORY" value={p.category} />}
-                {p.camera && <MetaRow label="CAMERA" value={p.camera} />}
-                {p.lens && <MetaRow label="LENS" value={p.lens} />}
-              </div>
-              <a
-                href={p.link}
-                className="inline-block px-7 py-3 rounded text-xs tracking-wide font-mono transition-opacity hover:opacity-80 self-start"
-                style={{ backgroundColor: "#e8a854", color: "#1a1a1a" }}
-              >
-                View Project
-              </a>
-            </div>
+            </AnimatePresence>
           </div>
-        </section>
-      ))}
 
-      {/* Thumbnail strip */}
+          {/* Details with crossfade */}
+          <div className="flex-1 pr-0 md:pr-24 flex flex-col justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <h2
+                  className="text-3xl md:text-5xl mb-6 leading-tight"
+                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 400, color: "#1a1a1a" }}
+                >
+                  {p.title}
+                </h2>
+                <p className="text-[13px] leading-relaxed mb-8 max-w-[400px] tracking-wide font-mono" style={{ color: "rgba(0,0,0,0.5)" }}>
+                  {p.description}
+                </p>
+                <div className="border-t border-b py-5 mb-8" style={{ borderColor: "rgba(0,0,0,0.1)" }}>
+                  {p.date && <MetaRow label="DATE" value={p.date} />}
+                  {p.client && <MetaRow label="CLIENT" value={p.client} />}
+                  {p.category && <MetaRow label="CATEGORY" value={p.category} />}
+                  {p.camera && <MetaRow label="CAMERA" value={p.camera} />}
+                  {p.lens && <MetaRow label="LENS" value={p.lens} />}
+                </div>
+                <a
+                  href={p.link}
+                  className="inline-block px-7 py-3 rounded text-xs tracking-wide font-mono transition-opacity hover:opacity-80 self-start"
+                  style={{ backgroundColor: "#e8a854", color: "#1a1a1a" }}
+                >
+                  View Project
+                </a>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* Thumbnail strip — click to switch */}
       <div className="fixed right-5 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50">
-        {PROJECTS.map((p, i) => (
+        {PROJECTS.map((proj, i) => (
           <div
             key={i}
-            onClick={() => scrollTo(i)}
+            onClick={() => setActiveIndex(i)}
             className="overflow-hidden rounded-sm cursor-pointer transition-all duration-500"
             style={{
               width: activeIndex === i ? 80 : 60,
@@ -155,7 +141,7 @@ const Index = () => {
               boxShadow: activeIndex === i ? "0 4px 20px rgba(0,0,0,0.15)" : "none",
             }}
           >
-            <img src={p.image} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
+            <img src={proj.image} alt={proj.title} className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
@@ -163,7 +149,7 @@ const Index = () => {
       {/* Bottom bar */}
       <div className="fixed bottom-5 left-8 flex items-center gap-4 z-50 font-mono text-xs" style={{ color: "rgba(0,0,0,0.5)" }}>
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => setActiveIndex(0)}
           className="w-7 h-7 border rounded-sm flex items-center justify-center transition-colors hover:bg-black/5"
           style={{ borderColor: "rgba(0,0,0,0.2)" }}
         >
