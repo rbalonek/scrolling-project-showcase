@@ -272,6 +272,16 @@ const DEMO_PROJECTS = [
 let projects = [];
 let activeIdx = 0;
 
+// Converts wix:image://v1/{fileId}/... URIs to a usable CDN URL
+function toImageUrl(val) {
+  if (!val) return '';
+  if (val.startsWith('wix:image://')) {
+    const fileId = val.replace('wix:image://v1/', '').split('/')[0].split('#')[0];
+    return `https://static.wixstatic.com/media/${fileId}`;
+  }
+  return val;
+}
+
 function renderProjects(data, cfg) {
   projects = data;
   if (cfg?.bgColor) document.documentElement.style.setProperty('--bg', cfg.bgColor);
@@ -283,7 +293,7 @@ function renderProjects(data, cfg) {
 
   // Pre-render all images (stacked, only active visible)
   imgContainer.innerHTML = projects.map((p, i) =>
-    `<img src="${p.image}" alt="${p.title}" class="${i === 0 ? 'active' : ''}" />`
+    `<img src="${toImageUrl(p.image)}" alt="${p.title}" class="${i === 0 ? 'active' : ''}" />`
   ).join('');
 
   // Pre-render all detail panels (stacked, only active visible)
@@ -305,7 +315,7 @@ function renderProjects(data, cfg) {
   // Thumbnails
   strip.innerHTML = projects.map((p, i) => `
     <div class="thumb-item ${i === 0 ? 'active' : ''}" onclick="setActive(${i})">
-      <img src="${p.image}" alt="${p.title}" />
+      <img src="${toImageUrl(p.image)}" alt="${p.title}" />
     </div>
   `).join('');
 
@@ -337,9 +347,20 @@ window.onmessage = (event) => {
   }
 };
 
-// Scroll wheel navigates between projects
+// Signal to the Wix parent page that we're ready to receive data
+window.parent.postMessage({ type: 'scroller-ready' }, '*');
+
+// Scroll wheel navigates between projects only when over the image
 let scrollLocked = false;
 window.addEventListener('wheel', (e) => {
+  const imageEl = document.getElementById('imageContainer');
+  if (!imageEl) return;
+  const rect = imageEl.getBoundingClientRect();
+  const overImage = e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top  && e.clientY <= rect.bottom;
+
+  if (!overImage) return; // let scroll bubble up to the Wix parent page
+
   e.preventDefault();
   if (scrollLocked || projects.length === 0) return;
   if (Math.abs(e.deltaY) < 30) return;
