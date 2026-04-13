@@ -23,14 +23,14 @@
     background-image: radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px);
     background-size: 20px 20px;
     overflow: hidden;
-    height: 100vh;
+    height: 50vh;
   }
 
   .project-view {
-    min-height: 100vh;
+    min-height: 50vh;
     display: flex;
     align-items: center;
-    padding: 60px 80px;
+    padding: 30px 80px;
     position: relative;
   }
 
@@ -45,7 +45,7 @@
   .project-image {
     flex: 0 0 55%;
     max-width: 55%;
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/2;
     overflow: hidden;
     position: relative;
   }
@@ -207,7 +207,7 @@
   .scroll-up-btn svg { width: 14px; height: 14px; }
 
   @media (max-width: 900px) {
-    .project-view { padding: 40px 20px; }
+    .project-view { padding: 20px 20px; }
     .project-inner { flex-direction: column; gap: 30px; }
     .project-image { flex: none; max-width: 100%; }
     .project-details { padding-right: 80px; }
