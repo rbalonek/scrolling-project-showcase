@@ -14,13 +14,15 @@
     --fg: #1a1a1a;
     --accent: #e8a854;
     --meta-color: rgba(0,0,0,0.5);
+    --dot-color: rgba(0,0,0,0.08);
+    --border-color: rgba(0,0,0,0.1);
   }
 
   body {
     font-family: 'IBM Plex Mono', monospace;
     background: var(--bg);
     color: var(--fg);
-    background-image: radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px);
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
     background-size: 20px 20px;
     overflow: hidden;
     height: 50vh;
@@ -106,8 +108,8 @@
   }
 
   .project-meta {
-    border-top: 1px solid rgba(0,0,0,0.1);
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     padding: 20px 0;
     margin-bottom: 32px;
   }
@@ -286,6 +288,14 @@ function renderProjects(data, cfg) {
   projects = data;
   if (cfg?.bgColor) document.documentElement.style.setProperty('--bg', cfg.bgColor);
   if (cfg?.accentColor) document.documentElement.style.setProperty('--accent', cfg.accentColor);
+  if (cfg?.textColor) {
+    document.documentElement.style.setProperty('--fg', cfg.textColor);
+    // Derive semi-transparent variants from the text color
+    const isLight = cfg.textColor === '#ffffff' || cfg.textColor === 'white';
+    document.documentElement.style.setProperty('--meta-color',   isLight ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)');
+    document.documentElement.style.setProperty('--dot-color',    isLight ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)');
+    document.documentElement.style.setProperty('--border-color', isLight ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)');
+  }
 
   const imgContainer = document.getElementById('imageContainer');
   const detContainer = document.getElementById('detailsContainer');
