@@ -290,11 +290,14 @@ function renderProjects(data, cfg) {
   if (cfg?.accentColor) document.documentElement.style.setProperty('--accent', cfg.accentColor);
   if (cfg?.textColor) {
     document.documentElement.style.setProperty('--fg', cfg.textColor);
-    // Derive semi-transparent variants from the text color
-    const isLight = cfg.textColor === '#ffffff' || cfg.textColor === 'white';
-    document.documentElement.style.setProperty('--meta-color',   isLight ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)');
-    document.documentElement.style.setProperty('--dot-color',    isLight ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)');
-    document.documentElement.style.setProperty('--border-color', isLight ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)');
+    // Derive rgba variants from the hex color directly
+    const hex = cfg.textColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    document.documentElement.style.setProperty('--meta-color',   `rgba(${r},${g},${b},0.5)`);
+    document.documentElement.style.setProperty('--dot-color',    `rgba(${r},${g},${b},0.08)`);
+    document.documentElement.style.setProperty('--border-color', `rgba(${r},${g},${b},0.15)`);
   }
 
   const imgContainer = document.getElementById('imageContainer');
