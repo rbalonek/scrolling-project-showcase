@@ -372,6 +372,46 @@ window.onmessage = (event) => {
 // Signal to the Wix parent page that we're ready to receive data
 window.parent.postMessage({ type: 'scroller-ready' }, '*');
 
+// Mobile: advance to next project when scrolled to bottom,
+//         go back to previous when swiping down from the very top
+let mobileLocked = false;
+let touchStartY = 0;
+
+window.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('scroll', () => {
+  if (window.innerWidth > 900 || projects.length === 0 || mobileLocked) return;
+
+  const atBottom = Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight - 4;
+
+  if (atBottom && activeIdx < projects.length - 1) {
+    mobileLocked = true;
+    setActive(activeIdx + 1);
+    window.scrollTo(0, 0);
+    setTimeout(() => { mobileLocked = false; }, 700);
+  }
+  // If on last project, scroll naturally continues to Wix page below
+}, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  if (window.innerWidth > 900 || projects.length === 0 || mobileLocked) return;
+
+  const dy = touchStartY - e.changedTouches[0].clientY; // negative = swipe down
+  const atTop = window.scrollY <= 2;
+
+  if (dy < -60 && atTop && activeIdx > 0) {
+    mobileLocked = true;
+    setActive(activeIdx - 1);
+    // scroll to bottom of previous project content after render
+    setTimeout(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      mobileLocked = false;
+    }, 50);
+  }
+}, { passive: true });
+
 // Scroll wheel navigates between projects only when over the image
 let scrollLocked = false;
 window.addEventListener('wheel', (e) => {
